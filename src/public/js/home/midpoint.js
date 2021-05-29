@@ -13,6 +13,7 @@ var radian = []; // radian 형식 좌표
 var cartesian = []; // cartesian 형식 좌표
 var rec = [];
 var rec_places = [];
+var rec_places2 = [];
 
 // 주소-좌표 변환 객체를 생성합니다
 var geocoder = new kakao.maps.services.Geocoder();
@@ -205,6 +206,21 @@ function isContained(places, y, x) {
     return data;
 }
 
+function searchPlaces2(place) {
+    ps.keywordSearch(place.place_name, function (data, status, pagination) {
+        if (status === kakao.maps.services.Status.OK) {
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].road_address_name === place.addr) {
+                    rec_places2[place.ROWNUM] = data[i];
+                }
+            }
+            rec_places2 = rec_places2.filter(Boolean);
+            displayPlaces(rec_places2);
+            displayPagination(pagination);
+        }
+    })
+}
+
 // 키워드 검색을 요청하는 함수입니다
 function searchPlaces(place) {
     ps.keywordSearch(place.place_name, function (data, status, pagination) {
@@ -215,29 +231,23 @@ function searchPlaces(place) {
                 }
             }
             // 추천리스트 검색을 요청한다.
-            $("#searchRC").click(function () {
-                rec_places = rec_places.filter(Boolean);
-                displayPlaces(rec_places);
-                displayPagination(pagination);
+            $("#searchRC").click(async function () {
+              univName = $("#nearbyUniv").val();
+              var data = await getPlaceStorage(1, univName);
+              rec = isContained(data, mid_point.Ma, mid_point.La);
+              if (rec.length > 0) {
+                  for (var i = 0; i < rec.length; i++) {
+                      searchPlaces2(rec[i]);
+                  }
+              }
+              else {
+                  $("#placesList").empty();
+                  $("#placesList").append("<h1>검색 결과가 존재하지 않습니다.</h1><br/>");
+                  $('#pagination').hide();
+              }
             })
         }
     })
-}
-
-function otherRecommendList(places) {
-    $("#otherRecommendList *").remove();
-    for (var i = 0; i < places.length; i++) {
-        $("#otherRecommendList").append("<li>" + places[i].place_name + "</li>");
-    };
-}
-
-// 주변 대학교 목록을 셀렉트 박스로 만드는 함수
-function appendUnivOption(places) {
-    $("#nearbyUniv *").remove();
-    $("#nearbyUniv").append(`<option value = "이름없음" selected>주변 대학교</option>`)
-    for (var i = 0; i < places.length; i++) {
-        $("#nearbyUniv").append(`<option value=${places[i].name}>${places[i].name}</option>`);
-    };
 }
 
 var univs = []; // 모든 대학교의 이름, 위도, 경도를 담을 배열
@@ -262,6 +272,14 @@ $.ajax({
     }
 });
 
+// 주변 대학교 목록을 셀렉트 박스로 만드는 함수
+function appendUnivOption(places) {
+    $('#nearbyUniv').children('option:not(:first)').remove();
+    for (var i = 0; i < places.length; i++) {
+        $("#nearbyUniv").append(`<option value=${places[i].name}>${places[i].name}</option>`);
+    };
+}
+
 // 주변 대학교 목록을 가져오는 함수
 function getNearbyUniv(y, x, callback) {
     const places = isContained(univs, y, x);
@@ -269,19 +287,9 @@ function getNearbyUniv(y, x, callback) {
 }
 
 async function showPlacelist(y, x) {
-    rec = [];
-    rec_places = [];
-
+    $('#nearbyUniv').val('userUniv').prop("selected",true);
     getNearbyUniv(y, x, function (univ) {
         appendUnivOption(univ);
-    });
-    var univName = "";
-    otherRecommendList('');
-
-    $("#nearbyUniv").change(async function () {
-        univName = $(this).val();
-        var data = await getPlaceStorage(1, univName);
-        otherRecommendList(isContained(data, y, x));
     });
 
     // 중심좌표 변수
@@ -294,9 +302,10 @@ async function showPlacelist(y, x) {
     $('#FD').prop('checked', true);
     searchCategory("FD6"); // 첫 화면
 
+    rec = [];
+    rec_places = [];
     var data = await getPlaceStorage(0, '');
-    rec = isContained(data, y, x);
-
+    rec = isContained(data, mid_point.Ma, mid_point.La);
     if (rec.length > 0) {
         for (var i = 0; i < rec.length; i++) {
             searchPlaces(rec[i]);
@@ -304,7 +313,9 @@ async function showPlacelist(y, x) {
     }
     else {
         $("#searchRC").click(function () {
-            alert("데이터가 없습니다.");
+            $("#placesList").empty();
+            $("#placesList").append("<h1>검색 결과가 존재하지 않습니다.</h1><br/>");
+            $('#pagination').hide();
         })
     }
 }
@@ -383,9 +394,27 @@ $('#sortby').change(function () {
     searchCategory(code);
 })
 
+$("#nearbyUniv").change(async function () {
+    univName = $(this).val();
+    var data = await getPlaceStorage(1, univName);
+    rec = isContained(data, mid_point.Ma, mid_point.La);
+    if (rec.length > 0) {
+        for (var i = 0; i < rec.length; i++) {
+            searchPlaces2(rec[i]);
+        }
+    }
+    else {
+        $("#placesList").empty();
+        $("#placesList").append("<h1>검색 결과가 존재하지 않습니다.</h1><br/>");
+        $('#pagination').hide();
+    }
+});
+
 // 카테고리 코드 검색을 요청하는 함수입니다
-function searchCategory(code) {
+async function searchCategory(code) {
     if (code !== "RC") {
+        $('#sortby').show();
+        $('#nearbyUniv').hide();
         var sortbyValue = kakao.maps.services.SortBy.ACCURACY;
         if (sortby.value === "DISTANCE") {
             sortbyValue = kakao.maps.services.SortBy.DISTANCE;
@@ -395,6 +424,10 @@ function searchCategory(code) {
             radius: radius.value,
             sort: sortbyValue,
         });
+    }
+    else {
+        $('#sortby').hide();
+        $('#nearbyUniv').show();
     }
 }
 
