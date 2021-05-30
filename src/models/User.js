@@ -37,8 +37,8 @@ class User {
   }
 
   async register() {
-    const client = this.body;    
-    client.salt = crypto.randomBytes(64).toString('base64');  
+    const client = this.body;
+    client.salt = crypto.randomBytes(64).toString('base64');
 
     try {
       client.psword = await User.hashPsword(client, client.salt);

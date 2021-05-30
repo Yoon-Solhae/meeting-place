@@ -12,9 +12,22 @@
 
 <body>
   <header>
-    <a href="/" id="logo"><h1>UNIV_MEETING_PLACE</h1></a>
+    <a href="/" id="logo">
+      <h1>UNIV_MEETING_PLACE</h1>
+    </a>
   </header>
+  <%=name%>
+  <% if (is_logined) {%>
+  | <a href="/logout">logout</a>
+  <% } else { %>
+  <script>
+    alert("로그인 후 이용해 주십시오.");
+    location.href = "login";
+  </script>
+  <a href="/login">login</a>
+  <% } %>
   <div id="appointment_list">
+    <%=name%>님의 약속 리스트
   </div>
 </body>
 

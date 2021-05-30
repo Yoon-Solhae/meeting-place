@@ -15,7 +15,7 @@ class PlaceStorage {
 
     static async getRecommendData(univ, gender) {
       return new Promise((resolve, reject) => {
-        const query = `SELECT @ROWNUM := @ROWNUM + 1 AS ROWNUM, A.* 
+        const query = `SELECT @ROWNUM := @ROWNUM + 1 AS ROWNUM, A.*
                         FROM(
                           SELECT COUNT(place_name), place_name, addr, lat, lng
                           FROM recommend_data
