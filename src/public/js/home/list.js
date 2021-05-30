@@ -51,7 +51,7 @@ function popUpDetail() {
   var users = document.createElement('div');
 
   users.setAttribute("id", "users");
-  users.innerHTML = "user1 : 경기도 성남시 분당구 수내동   <input type='button' value='경로 안내' onclick='location.href=nav' />" ;
+  users.innerHTML = "user1 : 경기도 성남시 분당구 미금로 114 <input type='button' value='경로 안내' onclick='location.href=nav' />" ;
 
   document.getElementById('appointment_list').appendChild(users);
 }
