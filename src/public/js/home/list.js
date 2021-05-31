@@ -1,38 +1,45 @@
-var db = [];
-fetch("list", {
+var mapCount = 1;
+
+async function getHistoryDb() {
+  const res = await fetch("list", {
     method: "PUT",
     headers: {
-        "Content-Type": "application/json",
+      "Content-Type": "application/json",
     },
-})
-    .then((res) => res.json())
-    .then((data) => db = data);
+  })
+  const data = await res.json();
+  return data;
+}
 
-function popUpDetail() {
-  var detail = document.createElement('div');
+async function load() {
+  const db = await getHistoryDb();
+  for (var i = 0; i < db.length; i++) {
+    $('#appointment_list').append(`<li id="list${i + 1}">약속${i + 1} - ${db[i].place_name}, ${db[i].addr}
+    <input type="button" value="상세 정보" onclick="popUpDetail(list${i+1});" /><div id="detail${i + 1}"></div></li><br>`);
+  }
+}
 
-  detail.setAttribute("id", "detail");
-  detail.innerHTML = '<div id="map" style="width:300px; height:300px; position:relative; overflow:hidden; display:inline-block;"></div>';
+async function popUpDetail(list) {
+  const db = await getHistoryDb();
 
-  document.getElementById('appointment_list').appendChild(detail);
-
-  var mapContainer = document.getElementById('map'), // 지도를 표시할 div
+  list.innerHTML += '<div id="' + list.id + '_map" style="width:300px; height:300px; position:relative; overflow:hidden; display:inline-block;"></div>';
+  var mapContainer = document.getElementById(list.id + '_map'), // 지도를 표시할 div
     mapOption = {
-      center: new kakao.maps.LatLng(37.4980854357918, 127.028000275071), // 지도의 중심좌표
+      center: new kakao.maps.LatLng(db[parseInt(list.id.substring(4)-1)].lat, db[parseInt(list.id.substring(4)-1)].lng), // 지도의 중심좌표
       draggable: false,
       level: 3 // 지도의 확대 레벨
     };
 
   // 지도를 생성합니다
   var map = new kakao.maps.Map(mapContainer, mapOption);
-  var iwContent = '<div style="padding:5px; text-align:center;">강남역</div>'
+  var iwContent = '<div style="padding:5px; text-align:center;">' + db[parseInt(list.id.substring(4)-1)].place_name + '</div>';
 
-  var markerPosition  = new kakao.maps.LatLng(37.4980854357918, 127.028000275071);
+  var markerPosition = new kakao.maps.LatLng(db[parseInt(list.id.substring(4)-1)].lat, db[parseInt(list.id.substring(4)-1)].lng);
   var marker = new kakao.maps.Marker({
     position: markerPosition
   }),
     infowindow = new kakao.maps.InfoWindow({
-      position : markerPosition,
+      position: markerPosition,
       content: iwContent,
       zIndex: 1,
       disableAutoPan: true
@@ -44,14 +51,17 @@ function popUpDetail() {
   var addr = document.createElement('div');
 
   addr.setAttribute("id", "addr");
-  addr.innerHTML = '서울 강남구 강남대로 지하 396';
+  addr.innerHTML = db[parseInt(list.id.substring(4)-1)].addr;
 
-  document.getElementById('appointment_list').appendChild(addr);
+  document.getElementById(list.id).appendChild(addr);
 
   var users = document.createElement('div');
 
   users.setAttribute("id", "users");
-  users.innerHTML = "user1 : 경기도 성남시 분당구 미금로 114 <input type='button' value='경로 안내' onclick='location.href=nav' />" ;
 
-  document.getElementById('appointment_list').appendChild(users);
+  for(var i = 1; i <= (((db[parseInt(list.id.substring(4)-1)].starting_position).split(",")).length)/2; i++) {
+    users.innerHTML += "user" + i + "&nbsp; <input type='button' value='경로 안내' onclick='location.href=nav' /><br>";
+  }
+
+  document.getElementById(list.id).appendChild(users);
 }
