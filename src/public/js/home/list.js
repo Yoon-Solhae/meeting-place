@@ -1,4 +1,5 @@
 var mapCount = 1;
+var geocoder = new kakao.maps.services.Geocoder();
 
 async function getHistoryDb() {
   const res = await fetch("list", {
@@ -15,26 +16,38 @@ async function load() {
   const db = await getHistoryDb();
   for (var i = 0; i < db.length; i++) {
     $('#appointment_list').append(`<li id="list${i + 1}">약속${i + 1} - ${db[i].place_name}, ${db[i].addr}
-    <input type="button" value="상세 정보" onclick="popUpDetail(list${i+1});" /><div id="detail${i + 1}"></div></li><br>`);
+    <input type="button" value="상세 정보" onclick="popUpDetail(${i + 1});"</li><br>`);
   }
 }
 
-async function popUpDetail(list) {
-  const db = await getHistoryDb();
+async function popUpDetail(listOrder) {
+  // var button = document.getElementById(`detail${listOrder}`);
+  // if (button.style.display == 'none') {
+  //     button.style.display = 'block';
+  // } else {
+  //     button.style.display = 'none';
+  // }
 
-  list.innerHTML += '<div id="' + list.id + '_map" style="width:300px; height:300px; position:relative; overflow:hidden; display:inline-block;"></div>';
-  var mapContainer = document.getElementById(list.id + '_map'), // 지도를 표시할 div
+  const db = await getHistoryDb();
+  var index = listOrder - 1;
+
+  var detail = document.createElement('div');
+  detail.setAttribute("id", `detail${listOrder}`);
+  document.getElementById(`list${listOrder}`).appendChild(detail);
+
+  detail.innerHTML += '<div id="' + detail.id + '_map" style="width:300px; height:300px; position:relative; overflow:hidden; display:inline-block;"></div>';
+  var mapContainer = document.getElementById(detail.id + '_map'), // 지도를 표시할 div
     mapOption = {
-      center: new kakao.maps.LatLng(db[parseInt(list.id.substring(4)-1)].lat, db[parseInt(list.id.substring(4)-1)].lng), // 지도의 중심좌표
+      center: new kakao.maps.LatLng(db[index].lat, db[index].lng), // 지도의 중심좌표
       draggable: false,
       level: 3 // 지도의 확대 레벨
     };
 
   // 지도를 생성합니다
   var map = new kakao.maps.Map(mapContainer, mapOption);
-  var iwContent = '<div style="padding:5px; text-align:center;">' + db[parseInt(list.id.substring(4)-1)].place_name + '</div>';
+  var iwContent = '<div style="padding:5px; text-align:center;">' + db[index].place_name + '</div>';
 
-  var markerPosition = new kakao.maps.LatLng(db[parseInt(list.id.substring(4)-1)].lat, db[parseInt(list.id.substring(4)-1)].lng);
+  var markerPosition = new kakao.maps.LatLng(db[index].lat, db[index].lng);
   var marker = new kakao.maps.Marker({
     position: markerPosition
   }),
@@ -51,17 +64,44 @@ async function popUpDetail(list) {
   var addr = document.createElement('div');
 
   addr.setAttribute("id", "addr");
-  addr.innerHTML = db[parseInt(list.id.substring(4)-1)].addr;
+  addr.innerHTML = db[index].addr;
 
-  document.getElementById(list.id).appendChild(addr);
+  document.getElementById(detail.id).appendChild(addr);
 
   var users = document.createElement('div');
 
   users.setAttribute("id", "users");
 
-  for(var i = 1; i <= (((db[parseInt(list.id.substring(4)-1)].starting_position).split(",")).length)/2; i++) {
-    users.innerHTML += "user" + i + "&nbsp; <input type='button' value='경로 안내' onclick='location.href=nav' /><br>";
+  var starting_position = JSON.parse(db[index].starting_position);
+  var starting_lat = {};
+  var starting_lng = {};
+  var userCnt = 1;
+
+  for (var i in starting_position) {
+    var coord = starting_position[i].split(',');
+    starting_lat[i] = coord[0];
+    starting_lng[i] = coord[1];
+  };
+
+  for (var i in starting_lat) {
+    var coord = new kakao.maps.LatLng(starting_lat[i], starting_lng[i]);
+    var callback = function coord2AddressCallback(result, status) {
+      if (status === kakao.maps.services.Status.OK) {
+        users.innerHTML += "user" + userCnt + ": ";
+
+        if (result[0].road_address == null) {
+          users.innerHTML += result[0].address.address_name;
+        } else {
+          users.innerHTML += result[0].road_address.address_name;
+        }
+
+        users.innerHTML += "&nbsp; <input type='button' value='경로 안내' onclick='location.href=nav' /><br>";
+        userCnt++;
+      }
+    }
+
+    geocoder.coord2Address(coord.getLng(), coord.getLat(), callback);
   }
 
-  document.getElementById(list.id).appendChild(users);
+  document.getElementById(detail.id).appendChild(users);
 }
