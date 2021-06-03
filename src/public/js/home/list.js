@@ -16,7 +16,7 @@ async function load() {
   const db = await getHistoryDb();
   for (var i = 0; i < db.length; i++) {
     $('#appointment_list').append(`<li id="list${i + 1}">약속${i + 1} - ${db[i].place_name}, ${db[i].addr}
-    <input type="button" value="상세 정보" onclick="popUpDetail(${i + 1});"</li><br>`);
+    <input type="button" value="상세 정보" onclick="popUpDetail(${i + 1});">  <input type="button" value="약속 취소" onclick="removePlace(${db[i].cnt});"></li><br>`);
   }
 }
 
@@ -35,7 +35,7 @@ async function popUpDetail(listOrder) {
   detail.setAttribute("id", `detail${listOrder}`);
   document.getElementById(`list${listOrder}`).appendChild(detail);
 
-  detail.innerHTML += '<div id="' + detail.id + '_map" style="width:300px; height:300px; position:relative; overflow:hidden; display:inline-block;"></div>';
+  detail.innerHTML += '<br><div id="' + detail.id + '_map" style="width:300px; height:300px; position:relative; overflow:hidden; display:inline-block;"></div>';
   var mapContainer = document.getElementById(detail.id + '_map'), // 지도를 표시할 div
     mapOption = {
       center: new kakao.maps.LatLng(db[index].lat, db[index].lng), // 지도의 중심좌표
@@ -49,8 +49,8 @@ async function popUpDetail(listOrder) {
 
   var markerPosition = new kakao.maps.LatLng(db[index].lat, db[index].lng);
   var marker = new kakao.maps.Marker({
-    position: markerPosition
-  }),
+      position: markerPosition
+    }),
     infowindow = new kakao.maps.InfoWindow({
       position: markerPosition,
       content: iwContent,
@@ -64,7 +64,7 @@ async function popUpDetail(listOrder) {
   var addr = document.createElement('div');
 
   addr.setAttribute("id", "addr");
-  addr.innerHTML = db[index].addr;
+  addr.innerHTML = "<br>약속 장소 주소 : " + db[index].addr;
 
   document.getElementById(detail.id).appendChild(addr);
 
@@ -87,7 +87,7 @@ async function popUpDetail(listOrder) {
     var coord = new kakao.maps.LatLng(starting_lat[i], starting_lng[i]);
     var callback = function coord2AddressCallback(result, status) {
       if (status === kakao.maps.services.Status.OK) {
-        users.innerHTML += "user" + userCnt + ": ";
+        users.innerHTML += "<br>user" + userCnt + ": ";
 
         if (result[0].road_address == null) {
           users.innerHTML += result[0].address.address_name;
