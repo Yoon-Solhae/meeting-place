@@ -131,7 +131,12 @@ const process = {
     const data = await HistoryStorage.get(req.session.name);
     res.send(data);
   },
-}
+
+  removePlace: async (req, res) => {
+    const data = await HistoryStorage.remove(req.body.cnt);
+    res.send(data);
+  },
+};
 
 module.exports = {
   output,

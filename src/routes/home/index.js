@@ -18,5 +18,6 @@ router.post("/register", ctrl.process.register);
 router.post("/midpoint", ctrl.process.confirm);
 router.put("/midpoint", ctrl.process.getPlacedb);
 router.put("/list", ctrl.process.getHistoryDb);
+router.post("/list", ctrl.process.removePlace);
 
 module.exports = router;
