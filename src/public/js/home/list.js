@@ -109,11 +109,13 @@ async function popUpDetail(listOrder) {
 
           if (result[0].road_address == null) {
             users.innerHTML += result[0].address.address_name;
+            var user_addr = result[0].address.address_name;
           } else {
             users.innerHTML += result[0].road_address.address_name;
+            var user_addr = result[0].road_address.address_name;
           }
 
-          users.innerHTML += "&nbsp; <input type='button' value='경로 안내' onclick='location.href=nav' /><br>";
+          users.innerHTML += `&nbsp; <input type='button' value='경로 안내' onclick="location.href='https://map.kakao.com/?sName=${user_addr}&eName=${db[index].addr}';" /><br>`;
           userCnt++;
         }
       }
