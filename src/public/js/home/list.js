@@ -1,5 +1,7 @@
 var mapCount = 1;
 var geocoder = new kakao.maps.services.Geocoder();
+var con_count = 1;
+Kakao.init('020bb9f07f28ca7f066538c8a2938c03');
 
 async function getHistoryDb() {
   const res = await fetch("list", {
@@ -15,7 +17,7 @@ async function getHistoryDb() {
 async function load() {
   const db = await getHistoryDb();
   for (var i = 0; i < db.length; i++) {
-    $('#appointment_list').append(`<li id="list${i + 1}" class="list_title" onclick="popUpDetail(${i+1})">${db[i].place_name}</li><div id="div${i+1}"></div><br>`);
+    $('#appointment_list').append(`<li id="list${i + 1}" class="list_title" onclick="popUpDetail(${i + 1})">${db[i].place_name}</li><div id="div${i + 1}"></div><br>`);
   }
 }
 
@@ -67,8 +69,8 @@ async function popUpDetail(listOrder) {
 
     var markerPosition = new kakao.maps.LatLng(db[index].lat, db[index].lng);
     var marker = new kakao.maps.Marker({
-        position: markerPosition
-      }),
+      position: markerPosition
+    }),
       infowindow = new kakao.maps.InfoWindow({
         position: markerPosition,
         content: iwContent,
@@ -83,6 +85,8 @@ async function popUpDetail(listOrder) {
 
     addr.setAttribute("id", "addr");
     addr.innerHTML = "<br>주소 : " + db[index].addr;
+    // addr.innerHTML += `<a id="create-kakao-link-btn${index}" href="javascript:;">
+    // <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png"/></a>`
 
     document.getElementById(detail.id).appendChild(addr);
 
@@ -104,8 +108,9 @@ async function popUpDetail(listOrder) {
     for (var i in starting_lat) {
       var coord = new kakao.maps.LatLng(starting_lat[i], starting_lng[i]);
       var callback = function coord2AddressCallback(result, status) {
+
         if (status === kakao.maps.services.Status.OK) {
-          users.innerHTML += "<br>user" + userCnt + ": ";
+          users.innerHTML += "<br><div id='userbar'>user" + userCnt ;
 
           if (result[0].road_address == null) {
             users.innerHTML += result[0].address.address_name;
@@ -115,8 +120,14 @@ async function popUpDetail(listOrder) {
             var user_addr = result[0].road_address.address_name;
           }
 
-          users.innerHTML += `&nbsp; <input type='button' value='경로 안내' onclick="location.href='https://map.kakao.com/?sName=${user_addr}&eName=${db[index].addr}';" /><br>`;
+          var mapUrl = `https://map.kakao.com/?sName=${user_addr}&eName=${db[index].addr}`;
+          var mobileUrl = `https://m.map.kakao.com/actions/publicRoute?startLoc=${user_addr}&sxEnc=MMSNLS&syEnc=QOQRQPS&endLoc=${db[index].addr}exEnc=MOPLUM&eyEnc=QNOMSNN`;
+
+          users.innerHTML += "<br>"+` &nbsp; <input  type='button' value='경로 안내' onclick="location.href='https://map.kakao.com/?sName=${user_addr}&eName=${db[index].addr}';"/><a id="kakao-link-btn${con_count}" href="javascript:;">
+          <img class='kakao' src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png" /align="middle"></a><hr>`;
+          createLink(db[index], con_count, mapUrl, mobileUrl);
           userCnt++;
+          con_count++;
         }
       }
 
@@ -129,5 +140,24 @@ async function popUpDetail(listOrder) {
 
     document.getElementById(detail.id).appendChild(users);
     document.getElementById(detail.id).appendChild(deleteButton);
+    // createLink(db[index], index);
   }
+}
+
+function createLink(db, i, mapUrl, mobileUrl) {
+  Kakao.Link.createDefaultButton({
+    container: `#kakao-link-btn${i}`,
+    objectType: 'location',
+    address: db.addr,
+    content: {
+      title: db.place_name,
+      description: db.addr,
+      imageUrl:
+        'http://k.kakaocdn.net/dn/bSbH9w/btqgegaEDfW/vD9KKV0hEintg6bZT4v4WK/kakaolink40_original.png',
+      link: {
+        mobileWebUrl: mobileUrl,
+        webUrl: mapUrl,
+      },
+    },
+  })
 }
