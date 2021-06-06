@@ -69,8 +69,8 @@ async function popUpDetail(listOrder) {
 
     var markerPosition = new kakao.maps.LatLng(db[index].lat, db[index].lng);
     var marker = new kakao.maps.Marker({
-      position: markerPosition
-    }),
+        position: markerPosition
+      }),
       infowindow = new kakao.maps.InfoWindow({
         position: markerPosition,
         content: iwContent,
@@ -110,7 +110,7 @@ async function popUpDetail(listOrder) {
       var callback = function coord2AddressCallback(result, status) {
 
         if (status === kakao.maps.services.Status.OK) {
-          users.innerHTML += "<br><div id='userbar'>user" + userCnt ;
+          users.innerHTML += "<br><div id='userbar'>user" + userCnt;
 
           if (result[0].road_address == null) {
             users.innerHTML += result[0].address.address_name;
@@ -121,11 +121,12 @@ async function popUpDetail(listOrder) {
           }
 
           var mapUrl = `https://map.kakao.com/?sName=${user_addr}&eName=${db[index].addr}`;
-          var mobileUrl = `https://m.map.kakao.com/actions/publicRoute?startLoc=${user_addr}&sxEnc=MMSNLS&syEnc=QOQRQPS&endLoc=${db[index].addr}exEnc=MOPLUM&eyEnc=QNOMSNN`;
+          var mobileUrl = `https://m.map.kakao.com/actions/publicRoute?startLoc=${user_addr}&sxEnc=MMSNLS&syEnc=QOQRQPS&endLoc=${db[index].addr}&exEnc=MOPLUM&eyEnc=QNOMSNN`;
 
-          users.innerHTML += "<br>"+` &nbsp; <input  type='button' value='경로 안내' onclick="location.href='https://map.kakao.com/?sName=${user_addr}&eName=${db[index].addr}';"/><a id="kakao-link-btn${con_count}" href="javascript:;">
+          users.innerHTML += "<br>" + ` &nbsp; <input type='button' value='경로 안내' onclick="location.href='https://map.kakao.com/?sName=${user_addr}&eName=${db[index].addr}';"/>
+          <a id="kakao-link-btn${con_count}" href='javascript:sendLink("${db[index].addr}", "${db[index].place_name}", "${mapUrl}", "${mobileUrl}")'>
           <img class='kakao' src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png" /align="middle"></a><hr>`;
-          createLink(db[index], con_count, mapUrl, mobileUrl);
+          // createLink(db[index], con_count, mapUrl, mobileUrl);
           userCnt++;
           con_count++;
         }
@@ -152,12 +153,35 @@ function createLink(db, i, mapUrl, mobileUrl) {
     content: {
       title: db.place_name,
       description: db.addr,
-      imageUrl:
-        'http://k.kakaocdn.net/dn/bSbH9w/btqgegaEDfW/vD9KKV0hEintg6bZT4v4WK/kakaolink40_original.png',
+      imageUrl: 'http://k.kakaocdn.net/dn/bSbH9w/btqgegaEDfW/vD9KKV0hEintg6bZT4v4WK/kakaolink40_original.png',
       link: {
         mobileWebUrl: mobileUrl,
         webUrl: mapUrl,
       },
     },
+  })
+}
+
+function sendLink(addr, title, mapUrl, mobileUrl) {
+  Kakao.Link.sendDefault({
+    objectType: 'location',
+    address: addr,
+    addressTitle: title,
+    content: {
+      title: title,
+      description: addr,
+      imageUrl: 'http://k.kakaocdn.net/dn/bSbH9w/btqgegaEDfW/vD9KKV0hEintg6bZT4v4WK/kakaolink40_original.png',
+      link: {
+        mobileWebUrl: mobileUrl,
+        webUrl: mapUrl,
+      },
+    },
+    buttons: [{
+      title: '웹으로 보기',
+      link: {
+        mobileWebUrl: mobileUrl,
+        webUrl: mapUrl,
+      },
+    }, ],
   })
 }
